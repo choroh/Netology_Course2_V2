@@ -150,6 +150,24 @@ def send_to_db(owner_id: int, find:bool,  **kandidat: dict) -> bool:
     return find
 
 
+def rus_eng(city):
+    """
+    Функция переводит название города кирилицей в латыницу для открытия страницы прогноза погоды
+    """
+    out = ''
+    dic = {'Ь': '', 'ь': '', 'Ъ': '', 'ъ': '', 'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
+           'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'E', 'е': 'e', 'Ё': 'E', 'ё': 'e', 'Ж': 'Zh', 'ж': 'zh',
+           'З': 'Z', 'з': 'z', 'И': 'I', 'и': 'i', 'Й': 'I', 'й': 'i', 'К': 'K', 'к': 'k', 'Л': 'L', 'л': 'l',
+           'М': 'M', 'м': 'm', 'Н': 'N', 'н': 'n', 'О': 'O', 'о': 'o', 'П': 'P', 'п': 'p', 'Р': 'R', 'р': 'r',
+           'С': 'S', 'с': 's', 'Т': 'T', 'т': 't', 'У': 'U', 'у': 'u', 'Ф': 'F', 'ф': 'f', 'Х': 'Kh', 'х': 'kh',
+           'Ц': 'Tc', 'ц': 'tc', 'Ч': 'Ch', 'ч': 'ch', 'Ш': 'Sh', 'ш': 'sh', 'Щ': 'Shch', 'щ': 'shch', 'Ы': 'Y',
+           'ы': 'y', 'Э': 'E', 'э': 'e', 'Ю': 'Iu', 'ю': 'iu', 'Я': 'Ia', 'я': 'ia'}
+    for i in city.lower():
+        out += dic.get(i)
+    return out
+
+
+
 def dialog() -> int:
     """
     Функция получает текст от пользователя VK и обрабатывает его.
@@ -160,6 +178,10 @@ def dialog() -> int:
     owner_id = user_message[0]
     owner_message = user_message[1]
 
+    owner_info = vk_client.get_user(owner_id)
+
+    print('city', owner_info)
+
     bot_message = f"""
             Вы зашли в службу поиска пары среди пользователей VK
             Для поиска пары, напишите 'поиск пары'"""
@@ -167,13 +189,18 @@ def dialog() -> int:
 
     while owner_message != 'поиск пары':  # Ждем от пользователя фразы поиска
 
-        if 'привет' in owner_message:
+        if 'привет' in owner_message or 'hi' in owner_message or 'здравствуйте' in owner_message:
             bot_message = 'Приветствую пользователя службы поиска пары на VK!'
             vk_my_package.api_vk.write_msg(owner_id, bot_message)
 
-        elif 'что ты можешь' in owner_message:
+        elif 'что ты можешь' in owner_message or 'что делает этот бот' in owner_message \
+                or 'что может этот бот' in owner_message:
             bot_message = f"""Я могу найти среди пользователей VK подходящую для вас пару\n
                 Для поиска пары, напишите 'поиск пары'"""
+            vk_my_package.api_vk.write_msg(owner_id, bot_message)
+
+        elif 'что ты еще можешь' in owner_message:
+            bot_message = f"""Я могу показать прогноз погоды в вашем городе'"""
             vk_my_package.api_vk.write_msg(owner_id, bot_message)
 
         elif 'ты кто' in owner_message or 'кто ты' in owner_message:
@@ -183,11 +210,18 @@ def dialog() -> int:
 
         elif any(('не нашел' in owner_message, 'не найден' in owner_message, 'не обнаруженно' in owner_message)):
             bot_message = f"""Возможно в данный момент подходящей кандидатуры нет. 
-            Попробуйте повторитьпоиск в другой раз."""
+            Попробуйте повторить поиск в другой раз."""
             vk_my_package.api_vk.write_msg(owner_id, bot_message)
 
         elif 'пока' in owner_message:
             bot_message = 'Удачи! Заходите еще.'
+            vk_my_package.api_vk.write_msg(owner_id, bot_message)
+
+        elif 'погод' in owner_message:
+            city = owner_info[0].get('city').get('title')
+            city = rus_eng(city)
+            url = f'https://www.meteoservice.ru/weather/3days/'
+            bot_message = url + city
             vk_my_package.api_vk.write_msg(owner_id, bot_message)
 
         else:

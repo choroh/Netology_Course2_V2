@@ -86,8 +86,8 @@ class VKUser:
             #'city': self.owner_params.get('city').get('id'),
             'hometown': self.owner_params.get('city'),
             'status': self.status,
-            'age_from': self.age - 2,
-            'age_to': self.age + 1,
+            'age_from': self.age - 3,
+            'age_to': self.age + 3,
             'has_photo': 1,
             'deactivated': None
         }
@@ -131,42 +131,6 @@ class VKUser:
         self.find_info = {'bdate': self.bdate, 'sex': self.sex, 'city': self.city, 'relation': self.relation,
             'deactivated': self.deactivated}
         return self.find_info
-
-    def select_users(self, any_info_: list, find_params: list):
-        """
-        функция отфильторвывает из перебираемых учкстинков тех, кто подходит по данным пользователю.
-         если страница заблокирована возвращается кортеж с id и причиной
-        :param any_info_: данные перебираемых участников
-        :param find_params: данные, которые необходимо искать для пользователя
-        :return: list/ tuple
-        relation:
-            1 — не женат/не замужем;
-            6 — в активном поиске
-            0 — не указано
-        """
-        self.any_info = any_info_
-        self.find_params = find_params
-
-        if not self.any_info[0].get('deactivated'):
-            # Если страница пользователя не заблокирована и не удалена
-            self.age_any = self.cut_year(self.any_info[0].get('bdate'))  # год рождения кандидатов
-            self.age_find = self.cut_year(self.find_params.get('bdate'))  # год рождения пользователя
-            self.sex_find = self.swap_sex(self.find_params.get('sex'))  # пол пользователя
-            if self.age_any:
-                self.age_user = range(self.age_find - 4, self.age_find + 5)
-                #  Если год рождения указан и верен, диаппазон для поиска +- 1 год от года пользователя
-                self.city = self.any_info[0].get('city', None)
-                if self.city:
-                    self.city = self.city.get('title')
-                    # Проверили, что город присутствует и получили его из 'title'
-
-                    if ((int(self.age_any) in self.age_user)
-                            and (self.any_info[0].get('sex') == self.sex_find)
-                            and (self.city == self.find_params.get('city'))
-                            and (self.any_info[0].get('relation') in (1, 6, 0))):
-                        return self.any_info
-        else:
-            return (self.any_info[0].get('id'), self.any_info[0].get('deactivated'))
 
     def get_photos(self, user_id: int, numbers=100) -> list:
         """
